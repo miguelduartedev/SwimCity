@@ -1,8 +1,10 @@
-import * as Location from "expo-location";
-import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import * as Location from "expo-location"
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons"
+import { useRouter } from "expo-router"
+import { useMemo, useState } from "react"
 import {
   ActivityIndicator,
+  LayoutChangeEvent,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,48 +12,55 @@ import {
   TextInput,
   useColorScheme,
   View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StatusBadge } from "../../components/StatusBadge";
-import { SwimmingMap } from "../../components/SwimmingMap";
+} from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
+import { StatusBadge } from "../../components/StatusBadge"
+import { SwimmingMap } from "../../components/SwimmingMap"
 import {
   calculateSwimmingStatus,
   formatFreshness,
   latestObservationAt,
-} from "../../features/swimming-spots/domain";
-import { filterSpots } from "../../features/swimming-spots/selectors";
-import { useSwimmingSpots } from "../../hooks/useSwimmingSpots";
-import { getTheme, radius, spacing, statusMeta } from "../../theme";
-import { Coordinates, SpotFilters, SwimmingSpot } from "../../types/swimming";
+} from "../../features/swimming-spots/domain"
+import { filterSpots } from "../../features/swimming-spots/selectors"
+import { useSwimmingSpots } from "../../hooks/useSwimmingSpots"
+import { getTheme, radius, spacing, statusMeta } from "../../theme"
+import { Coordinates, SpotFilters, SwimmingSpot } from "../../types/swimming"
 
 export default function ExploreScreen() {
-  const theme = getTheme(useColorScheme());
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const { data = [], isLoading, isError, refetch } = useSwimmingSpots();
-  const [query, setQuery] = useState("");
-  const [filters, setFilters] = useState<SpotFilters>({});
-  const [showFilters, setShowFilters] = useState(false);
-  const [selected, setSelected] = useState<SwimmingSpot | undefined>();
-  const [userLocation, setUserLocation] = useState<Coordinates>();
+  const theme = getTheme(useColorScheme())
+  const insets = useSafeAreaInsets()
+  const router = useRouter()
+  const { data = [], isLoading, isError, refetch } = useSwimmingSpots()
+  const [query, setQuery] = useState("")
+  const [filters, setFilters] = useState<SpotFilters>({})
+  const [showFilters, setShowFilters] = useState(false)
+  const [selected, setSelected] = useState<SwimmingSpot | undefined>()
+  const [userLocation, setUserLocation] = useState<Coordinates>()
+  const [bottomContentInset, setBottomContentInset] = useState(0)
   const spots = useMemo(
     () => filterSpots(data, query, filters),
     [data, query, filters],
-  );
+  )
   const requestLocation = async () => {
-    const response = await Location.requestForegroundPermissionsAsync();
+    const response = await Location.requestForegroundPermissionsAsync()
     if (response.status === "granted") {
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
-      });
+      })
       setUserLocation({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-      });
+      })
     }
-  };
+  }
+  const updateBottomContentInset = (event: LayoutChangeEvent) => {
+    const nextInset = Math.ceil(event.nativeEvent.layout.height)
+    setBottomContentInset((currentInset) =>
+      currentInset === nextInset ? currentInset : nextInset,
+    )
+  }
   if (isLoading)
-    return <Centered label="Finding Helsinki swimming spots…" theme={theme} />;
+    return <Centered label="Finding Helsinki swimming spots…" theme={theme} />
   if (isError)
     return (
       <Centered
@@ -60,13 +69,14 @@ export default function ExploreScreen() {
         action="Try again"
         onAction={() => refetch()}
       />
-    );
+    )
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
       <SwimmingMap
         spots={spots}
         theme={theme}
         userLocation={userLocation}
+        bottomContentInset={bottomContentInset}
         onSelect={setSelected}
       />
       <View
@@ -97,7 +107,12 @@ export default function ExploreScreen() {
             { backgroundColor: theme.surface, borderColor: theme.border },
           ]}
         >
-          <Text style={{ color: theme.textMuted }}>⌕</Text>
+          <MaterialCommunityIcons
+            name="magnify"
+            size={21}
+            color={theme.textMuted}
+            accessible={false}
+          />
           <TextInput
             accessibilityLabel="Search beaches"
             value={query}
@@ -176,45 +191,67 @@ export default function ExploreScreen() {
           </View>
         )}
       </View>
-      <Pressable
-        onPress={requestLocation}
-        style={[styles.locationButton, { backgroundColor: theme.surface }]}
-        accessibilityRole="button"
-        accessibilityLabel="Use my location"
+      <View
+        testID="explore-bottom-overlay"
+        style={styles.bottomOverlay}
+        onLayout={updateBottomContentInset}
       >
-        <Text style={{ color: theme.teal, fontSize: 20 }}>◎</Text>
-      </Pressable>
-      <View style={[styles.legend, { backgroundColor: theme.mapOverlay }]}>
-        {(["good", "caution", "avoid", "unknown"] as const).map((status) => (
-          <View key={status} style={styles.legendItem}>
-            <Text style={{ color: theme[status] }}>●</Text>
-            <Text style={[styles.legendText, { color: theme.text }]}>
-              {statusMeta[status].shortLabel}
+        <View style={styles.mapControlsRow}>
+          <View
+            testID="swimming-status-legend"
+            style={[styles.legend, { backgroundColor: theme.mapOverlay }]}
+          >
+            {(["good", "caution", "avoid", "unknown"] as const).map(
+              (status) => (
+                <View key={status} style={styles.legendItem}>
+                  <Text style={{ color: theme[status] }}>●</Text>
+                  <Text style={[styles.legendText, { color: theme.text }]}>
+                    {statusMeta[status].shortLabel}
+                  </Text>
+                </View>
+              ),
+            )}
+          </View>
+          <Pressable
+            onPress={requestLocation}
+            style={[styles.locationButton, { backgroundColor: theme.surface }]}
+            accessibilityRole="button"
+            accessibilityLabel="Use my location"
+            testID="use-location-button"
+          >
+            <MaterialCommunityIcons
+              name="crosshairs-gps"
+              size={22}
+              color={theme.teal}
+              accessible={false}
+            />
+          </Pressable>
+        </View>
+        {selected ? (
+          <SpotPreview
+            spot={selected}
+            theme={theme}
+            onClose={() => setSelected(undefined)}
+            onDetails={() =>
+              router.push({
+                pathname: "/spot/[id]",
+                params: { id: selected.id },
+              })
+            }
+          />
+        ) : (
+          <View style={[styles.hint, { backgroundColor: theme.surface }]}>
+            <Text style={{ color: theme.text, fontWeight: "700" }}>
+              {spots.length} Helsinki swimming spots
+            </Text>
+            <Text style={{ color: theme.textMuted, fontSize: 12 }}>
+              Tap a marker to see conditions
             </Text>
           </View>
-        ))}
+        )}
       </View>
-      {selected ? (
-        <SpotPreview
-          spot={selected}
-          theme={theme}
-          onClose={() => setSelected(undefined)}
-          onDetails={() =>
-            router.push({ pathname: "/spot/[id]", params: { id: selected.id } })
-          }
-        />
-      ) : (
-        <View style={[styles.hint, { backgroundColor: theme.surface }]}>
-          <Text style={{ color: theme.text, fontWeight: "700" }}>
-            {spots.length} Helsinki swimming spots
-          </Text>
-          <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-            Tap a marker to see conditions
-          </Text>
-        </View>
-      )}
     </View>
-  );
+  )
 }
 function SpotPreview({
   spot,
@@ -222,13 +259,13 @@ function SpotPreview({
   onClose,
   onDetails,
 }: {
-  spot: SwimmingSpot;
-  theme: ReturnType<typeof getTheme>;
-  onClose: () => void;
-  onDetails: () => void;
+  spot: SwimmingSpot
+  theme: ReturnType<typeof getTheme>
+  onClose: () => void
+  onDetails: () => void
 }) {
-  const status = calculateSwimmingStatus(spot.observation);
-  const latest = latestObservationAt(spot.observation);
+  const status = calculateSwimmingStatus(spot.observation)
+  const latest = latestObservationAt(spot.observation)
   return (
     <View style={[styles.preview, { backgroundColor: theme.surface }]}>
       <View style={styles.previewRow}>
@@ -264,7 +301,7 @@ function SpotPreview({
         <Text style={styles.detailsButtonText}>View details</Text>
       </Pressable>
     </View>
-  );
+  )
 }
 function FilterChip({
   label,
@@ -272,10 +309,10 @@ function FilterChip({
   onPress,
   theme,
 }: {
-  label: string;
-  active?: boolean;
-  onPress: () => void;
-  theme: ReturnType<typeof getTheme>;
+  label: string
+  active?: boolean
+  onPress: () => void
+  theme: ReturnType<typeof getTheme>
 }) {
   return (
     <Pressable
@@ -295,7 +332,7 @@ function FilterChip({
         {label}
       </Text>
     </Pressable>
-  );
+  )
 }
 function Centered({
   label,
@@ -303,10 +340,10 @@ function Centered({
   action,
   onAction,
 }: {
-  label: string;
-  theme: ReturnType<typeof getTheme>;
-  action?: string;
-  onAction?: () => void;
+  label: string
+  theme: ReturnType<typeof getTheme>
+  action?: string
+  onAction?: () => void
 }) {
   return (
     <View style={[styles.center, { backgroundColor: theme.background }]}>
@@ -318,7 +355,7 @@ function Centered({
         </Pressable>
       )}
     </View>
-  );
+  )
 }
 const styles = StyleSheet.create({
   screen: { flex: 1 },
@@ -330,7 +367,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     elevation: 5,
     paddingHorizontal: spacing.md,
-    gap: 10,
+    gap: spacing.sm,
   },
   headerRow: {
     flexDirection: "row",
@@ -384,9 +421,6 @@ const styles = StyleSheet.create({
   },
   markerText: { color: "#fff", fontWeight: "900", fontSize: 18 },
   locationButton: {
-    position: "absolute",
-    right: 16,
-    bottom: 218,
     width: 46,
     height: 46,
     borderRadius: 23,
@@ -395,10 +429,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   legend: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 164,
+    flex: 1,
     borderRadius: 14,
     flexDirection: "row",
     justifyContent: "space-around",
@@ -407,21 +438,30 @@ const styles = StyleSheet.create({
   },
   legendItem: { flexDirection: "row", gap: 4, alignItems: "center" },
   legendText: { fontSize: 10, fontWeight: "700" },
-  hint: {
+  bottomOverlay: {
     position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 20,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+    elevation: 10,
+  },
+  mapControlsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+  },
+  hint: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
     borderRadius: radius.lg,
     padding: spacing.md,
     gap: 3,
     elevation: 3,
   },
   preview: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
     padding: spacing.md,
     paddingBottom: 22,
     borderTopLeftRadius: radius.lg,
@@ -453,4 +493,4 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   centerText: { fontSize: 16, textAlign: "center" },
-});
+})
