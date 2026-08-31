@@ -8,15 +8,15 @@ SwimCity is an Expo app for discovering Helsinki swimming spots. It puts City of
 
 ### iOS
 
-_Coming soon — add an Explore and detail-screen capture._
+![SwimCity Explore map](screenshots/explore-map.PNG)
 
 ### Android
 
-_Coming soon — add a map and saved-spots capture._
+_Coming soon._
 
 ### Web
 
-_Coming soon — add a desktop map capture._
+_Coming soon._
 
 ## Features
 
@@ -29,12 +29,12 @@ _Coming soon — add a desktop map capture._
 ## Architecture
 
 \`\`\`text
-app/                         Expo Router screens and navigation
-components/                  Presentational, accessible UI primitives
-features/swimming-spots/     Pure condition and sorting/filtering domain logic
-services/api/                City catalog and condition-provider contracts
-stores/                      Persisted Zustand state
-types/ + theme/              Normalized model and shared visual tokens
+app/ Expo Router screens and navigation
+components/ Presentational, accessible UI primitives
+features/swimming-spots/ Pure condition and sorting/filtering domain logic
+services/api/ City catalog and condition-provider contracts
+stores/ Persisted Zustand state
+types/ + theme/ Normalized model and shared visual tokens
 \`\`\`
 
 The normalized \`SwimmingSpot\` model isolates external source shapes. \`CityCatalogProvider\` and \`ConditionsProvider\` keep a future Oslo or Stockholm provider as a data-layer addition rather than a screen rewrite.
@@ -122,4 +122,3 @@ Tests cover condition precedence and freshness, sorting/filtering, Service Map n
 - Add a dedicated attribution/settings surface and localized Finnish/Swedish copy.
 - Revisit UiRaS only after its reuse licence is confirmed.
 - Add city providers for Oslo and Stockholm without introducing city selection yet.
-
