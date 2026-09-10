@@ -338,6 +338,27 @@ svg.leaflet-image-layer.leaflet-interactive path {
   border-right-color: #fff;
 }
 
+/* SwimCity's text-labelled beach markers use Leaflet DivIcon. */
+.swimcity-spot-marker-icon {
+  background: transparent;
+  border: 0;
+}
+
+.swimcity-spot-marker-icon span {
+  box-sizing: border-box;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 3px solid;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 17, 0.2);
+  font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
 @media print {
   .leaflet-control {
     -webkit-print-color-adjust: exact;

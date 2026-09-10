@@ -43,6 +43,7 @@ export interface ServiceMapUnit {
   street_address?: LocalizedText;
   address_zip?: string;
   description?: LocalizedText;
+  picture_url?: string | null;
   location?: { coordinates?: [number, number] };
   connections?: ServiceMapConnection[];
   observations?: ServiceMapObservation[] | null;
@@ -53,6 +54,8 @@ const localized = (value?: LocalizedText) => value?.en ?? value?.fi ?? value?.sv
 const allLocalized = (value?: LocalizedText) => Object.values(value ?? {}).filter((item): item is string => typeof item === 'string').join(' ');
 const observationFor = (unit: ServiceMapUnit, property: string) => unit.observations?.find((item) => item.property === property);
 const validTimestamp = (value: unknown): value is string => typeof value === 'string' && !Number.isNaN(new Date(value).getTime());
+const normalizeImageUrl = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.trim() ? value.trim() : undefined;
 
 const asTimedValue = <T,>(value: T, source: 'service-map', observation?: ServiceMapObservation): TimedValue<T> | undefined => {
   if (!validTimestamp(observation?.time)) return undefined;
@@ -181,6 +184,7 @@ export const normalizeServiceMapUnit = (unit: ServiceMapUnit, now = new Date()):
     address: [street, unit.address_zip].filter(Boolean).join(', ') || 'Helsinki',
     coordinates: { latitude, longitude },
     description: localized(unit.description),
+    imageUrl: normalizeImageUrl(unit.picture_url),
     amenities: normalizeAmenities(unit),
     accessible: normalizeAccessibility(unit),
     lifeguard: normalizeLifeguard(unit, now),

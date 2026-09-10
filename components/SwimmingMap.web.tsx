@@ -1,9 +1,13 @@
 import './leaflet-swimcity.css';
 import { CSSProperties, useEffect } from 'react';
-import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
-import { latLngBounds } from 'leaflet';
-import { calculateSwimmingStatus } from '../features/swimming-spots/domain';
-import { Theme, statusMeta } from '../theme';
+import { CircleMarker, MapContainer, Marker, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import { divIcon, latLngBounds } from 'leaflet';
+import {
+  getMapMarkerAppearance,
+  MapDisplayMode,
+  MapMarkerAppearance,
+} from '../features/swimming-spots/mapPresentation';
+import { Theme } from '../theme';
 import { Coordinates, SwimmingSpot } from '../types/swimming';
 
 const HELSINKI_CENTER: [number, number] = [60.1699, 24.9384];
@@ -12,6 +16,8 @@ const HELSINKI_ZOOM = 11;
 type SwimmingMapProps = {
   spots: SwimmingSpot[];
   theme: Theme;
+  displayMode: MapDisplayMode;
+  selectedSpotId?: string;
   userLocation?: Coordinates;
   bottomContentInset?: number;
   onSelect: (spot: SwimmingSpot) => void;
@@ -21,6 +27,8 @@ type SwimmingMapProps = {
 export function SwimmingMap({
   spots,
   theme,
+  displayMode,
+  selectedSpotId,
   userLocation,
   bottomContentInset = 0,
   onSelect,
@@ -41,25 +49,23 @@ export function SwimmingMap({
       <FitToSpots spots={spots} bottomContentInset={bottomContentInset} />
       <PositionAttribution bottomContentInset={bottomContentInset} />
       {spots.map((spot) => {
-        const status = calculateSwimmingStatus(spot.observation);
+        const appearance = getMapMarkerAppearance(spot, displayMode, theme);
 
         return (
-          <CircleMarker
+          <Marker
             key={spot.id}
-            center={[spot.coordinates.latitude, spot.coordinates.longitude]}
-            radius={12}
-            pathOptions={{
-              color: theme.surface,
-              weight: 3,
-              fillColor: theme[status],
-              fillOpacity: 1,
-            }}
+            position={[spot.coordinates.latitude, spot.coordinates.longitude]}
+            icon={createSpotMarkerIcon(appearance, theme.surface)}
+            title={appearance.tooltip}
+            alt={appearance.accessibilityLabel}
             eventHandlers={{ click: () => onSelect(spot) }}
           >
-            <Tooltip direction="top" offset={[0, -8]}>
-              {spot.name} — {statusMeta[status].label}
-            </Tooltip>
-          </CircleMarker>
+            {selectedSpotId === spot.id && (
+              <Tooltip permanent direction="top" offset={[0, -8]}>
+                {appearance.tooltip}
+              </Tooltip>
+            )}
+          </Marker>
         );
       })}
       {userLocation && (
@@ -73,6 +79,15 @@ export function SwimmingMap({
       )}
     </MapContainer>
   );
+}
+
+function createSpotMarkerIcon(appearance: MapMarkerAppearance, borderColor: string) {
+  return divIcon({
+    className: 'swimcity-spot-marker-icon',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    html: `<span style="background:${appearance.fillColor};border-color:${borderColor};color:${appearance.textColor}">${appearance.label}</span>`,
+  });
 }
 
 function FitToSpots({

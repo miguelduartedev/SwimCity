@@ -16,4 +16,15 @@ describe('SpotCard', () => {
     const screen = render(<SpotCard spot={spot} theme={getTheme('light')} onPress={jest.fn()} />);
     expect(screen.getByText('Algae: None observed')).toBeTruthy();
   });
+  it('keeps a dedicated thumbnail surface for an API beach image', () => {
+    const screen = render(
+      <SpotCard
+        spot={{ ...spot, imageUrl: 'https://media.hel.fi/hietaranta.jpg' }}
+        theme={getTheme('light')}
+        onPress={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('spot-card-image')).toBeTruthy();
+  });
 });

@@ -1,12 +1,12 @@
 import * as Location from "expo-location"
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons"
+import { LinearGradient } from "expo-linear-gradient"
 import { useRouter } from "expo-router"
 import { useMemo, useState } from "react"
 import {
   ActivityIndicator,
   LayoutChangeEvent,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -21,10 +21,18 @@ import {
   formatFreshness,
   latestObservationAt,
 } from "../../features/swimming-spots/domain"
+import {
+  getMapDisplayMode,
+  getOffSeasonId,
+  MapDisplayMode,
+  TEMPERATURE_GRADIENT_COLORS,
+  TEMPERATURE_GRADIENT_LOCATIONS,
+} from "../../features/swimming-spots/mapPresentation"
 import { filterSpots } from "../../features/swimming-spots/selectors"
 import { useSwimmingSpots } from "../../hooks/useSwimmingSpots"
+import { useSeasonalDisclaimerStore } from "../../stores/useSeasonalDisclaimerStore"
 import { getTheme, radius, spacing, statusMeta } from "../../theme"
-import { Coordinates, SpotFilters, SwimmingSpot } from "../../types/swimming"
+import { Coordinates, SwimmingSpot } from "../../types/swimming"
 
 export default function ExploreScreen() {
   const theme = getTheme(useColorScheme())
@@ -32,14 +40,28 @@ export default function ExploreScreen() {
   const router = useRouter()
   const { data = [], isLoading, isError, refetch } = useSwimmingSpots()
   const [query, setQuery] = useState("")
-  const [filters, setFilters] = useState<SpotFilters>({})
-  const [showFilters, setShowFilters] = useState(false)
   const [selected, setSelected] = useState<SwimmingSpot | undefined>()
   const [userLocation, setUserLocation] = useState<Coordinates>()
   const [bottomContentInset, setBottomContentInset] = useState(0)
+  const displayMode = getMapDisplayMode()
+  const offSeasonId = getOffSeasonId()
+  const dismissedOffSeasonDisclaimerFor = useSeasonalDisclaimerStore(
+    (state) => state.dismissedOffSeasonDisclaimerFor,
+  )
+  const hasDismissalHydrated = useSeasonalDisclaimerStore(
+    (state) => state.hasHydrated,
+  )
+  const dismissSeasonalDisclaimer = useSeasonalDisclaimerStore(
+    (state) => state.dismissFor,
+  )
+  const shouldShowSeasonalDisclaimer =
+    displayMode === "temperature" &&
+    hasDismissalHydrated &&
+    Boolean(offSeasonId) &&
+    dismissedOffSeasonDisclaimerFor !== offSeasonId
   const spots = useMemo(
-    () => filterSpots(data, query, filters),
-    [data, query, filters],
+    () => filterSpots(data, query, {}),
+    [data, query],
   )
   const requestLocation = async () => {
     const response = await Location.requestForegroundPermissionsAsync()
@@ -75,6 +97,8 @@ export default function ExploreScreen() {
       <SwimmingMap
         spots={spots}
         theme={theme}
+        displayMode={displayMode}
+        selectedSpotId={selected?.id}
         userLocation={userLocation}
         bottomContentInset={bottomContentInset}
         onSelect={setSelected}
@@ -85,21 +109,11 @@ export default function ExploreScreen() {
           { paddingTop: Math.max(insets.top + spacing.xs, spacing.lg) },
         ]}
       >
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={[styles.brand, { color: theme.text }]}>SwimCity</Text>
-            <Text style={[styles.subtitle, { color: theme.textMuted }]}>
-              Helsinki, Finland
-            </Text>
-          </View>
-          <Pressable
-            onPress={() => setShowFilters((value) => !value)}
-            accessibilityRole="button"
-            accessibilityLabel="Open filters"
-            style={[styles.circleButton, { backgroundColor: theme.surface }]}
-          >
-            <Text style={{ color: theme.text, fontSize: 20 }}>☷</Text>
-          </Pressable>
+        <View>
+          <Text style={[styles.brand, { color: theme.text }]}>SwimCity</Text>
+          <Text style={[styles.subtitle, { color: theme.textMuted }]}>
+            Helsinki, Finland
+          </Text>
         </View>
         <View
           style={[
@@ -128,68 +142,6 @@ export default function ExploreScreen() {
             <Text style={{ color: theme.teal, fontWeight: "800" }}>List</Text>
           </Pressable>
         </View>
-        {showFilters && (
-          <View style={[styles.filters, { backgroundColor: theme.surface }]}>
-            <Text style={[styles.filterTitle, { color: theme.text }]}>
-              Quick filters
-            </Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8 }}
-            >
-              <FilterChip
-                label="Good"
-                active={filters.status === "good"}
-                onPress={() =>
-                  setFilters((f) => ({
-                    ...f,
-                    status: f.status === "good" ? undefined : "good",
-                  }))
-                }
-                theme={theme}
-              />
-              <FilterChip
-                label="Lifeguard"
-                active={filters.lifeguard}
-                onPress={() =>
-                  setFilters((f) => ({ ...f, lifeguard: !f.lifeguard }))
-                }
-                theme={theme}
-              />
-              <FilterChip
-                label="Accessible"
-                active={filters.accessible}
-                onPress={() =>
-                  setFilters((f) => ({ ...f, accessible: !f.accessible }))
-                }
-                theme={theme}
-              />
-              <FilterChip
-                label="Shower"
-                active={filters.amenity === "shower"}
-                onPress={() =>
-                  setFilters((f) => ({
-                    ...f,
-                    amenity: f.amenity === "shower" ? undefined : "shower",
-                  }))
-                }
-                theme={theme}
-              />
-              <FilterChip
-                label="Toilet"
-                active={filters.amenity === "toilet"}
-                onPress={() =>
-                  setFilters((f) => ({
-                    ...f,
-                    amenity: f.amenity === "toilet" ? undefined : "toilet",
-                  }))
-                }
-                theme={theme}
-              />
-            </ScrollView>
-          </View>
-        )}
       </View>
       <View
         testID="explore-bottom-overlay"
@@ -197,21 +149,7 @@ export default function ExploreScreen() {
         onLayout={updateBottomContentInset}
       >
         <View style={styles.mapControlsRow}>
-          <View
-            testID="swimming-status-legend"
-            style={[styles.legend, { backgroundColor: theme.mapOverlay }]}
-          >
-            {(["good", "caution", "avoid", "unknown"] as const).map(
-              (status) => (
-                <View key={status} style={styles.legendItem}>
-                  <Text style={{ color: theme[status] }}>●</Text>
-                  <Text style={[styles.legendText, { color: theme.text }]}>
-                    {statusMeta[status].shortLabel}
-                  </Text>
-                </View>
-              ),
-            )}
-          </View>
+          <MapLegend displayMode={displayMode} theme={theme} />
           <Pressable
             onPress={requestLocation}
             style={[styles.locationButton, { backgroundColor: theme.surface }]}
@@ -239,16 +177,100 @@ export default function ExploreScreen() {
               })
             }
           />
-        ) : (
-          <View style={[styles.hint, { backgroundColor: theme.surface }]}>
-            <Text style={{ color: theme.text, fontWeight: "700" }}>
-              {spots.length} Helsinki swimming spots
-            </Text>
-            <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-              Tap a marker to see conditions
+        ) : shouldShowSeasonalDisclaimer ? (
+          <View
+            testID="seasonal-data-disclaimer"
+            style={[
+              styles.seasonalDisclaimer,
+              { backgroundColor: theme.surfaceMuted },
+            ]}
+          >
+            <View style={styles.seasonalDisclaimerRow}>
+              <Text
+                style={[styles.seasonalDisclaimerText, { color: theme.textMuted }]}
+              >
+                Beach observations are seasonal. Outside the swimming season,
+                some data may be unavailable or outdated.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss seasonal data notice"
+                onPress={() => {
+                  if (offSeasonId) dismissSeasonalDisclaimer(offSeasonId)
+                }}
+                style={styles.dismissDisclaimerButton}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={18}
+                  color={theme.textMuted}
+                  accessible={false}
+                />
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+      </View>
+    </View>
+  )
+}
+function MapLegend({
+  displayMode,
+  theme,
+}: {
+  displayMode: MapDisplayMode
+  theme: ReturnType<typeof getTheme>
+}) {
+  if (displayMode === "summer-status") {
+    return (
+      <View
+        testID="swimming-status-legend"
+        style={[
+          styles.legend,
+          styles.statusLegend,
+          { backgroundColor: theme.mapOverlay },
+        ]}
+      >
+        {(["good", "caution", "avoid", "unknown"] as const).map((status) => (
+          <View key={status} style={styles.legendItem}>
+            <Text style={{ color: theme[status] }}>●</Text>
+            <Text style={[styles.legendText, { color: theme.text }]}>
+              {statusMeta[status].shortLabel}
             </Text>
           </View>
-        )}
+        ))}
+      </View>
+    )
+  }
+
+  return (
+    <View
+      testID="temperature-legend"
+      style={[
+        styles.legend,
+        styles.temperatureLegend,
+        { backgroundColor: theme.mapOverlay },
+      ]}
+    >
+      <Text style={[styles.temperatureLegendTitle, { color: theme.text }]}>
+        Water temperature
+      </Text>
+      <LinearGradient
+        testID="temperature-gradient"
+        colors={TEMPERATURE_GRADIENT_COLORS}
+        locations={TEMPERATURE_GRADIENT_LOCATIONS}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.temperatureGradient}
+      />
+      <View style={styles.temperatureLegendLabels}>
+        <Text style={[styles.legendText, { color: theme.textMuted }]}>
+          ≤10°C — Very cold
+        </Text>
+        <Text style={[styles.legendText, { color: theme.textMuted }]}>18°C</Text>
+        <Text style={[styles.legendText, { color: theme.textMuted }]}>
+          ≥25°C — Warm
+        </Text>
       </View>
     </View>
   )
@@ -303,37 +325,6 @@ function SpotPreview({
     </View>
   )
 }
-function FilterChip({
-  label,
-  active,
-  onPress,
-  theme,
-}: {
-  label: string
-  active?: boolean
-  onPress: () => void
-  theme: ReturnType<typeof getTheme>
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.chip,
-        { backgroundColor: active ? theme.teal : theme.surfaceMuted },
-      ]}
-    >
-      <Text
-        style={{
-          color: active ? "#fff" : theme.text,
-          fontSize: 12,
-          fontWeight: "700",
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  )
-}
 function Centered({
   label,
   theme,
@@ -369,24 +360,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
   brand: { fontSize: 25, fontWeight: "900", letterSpacing: -1 },
   subtitle: { fontSize: 12, fontWeight: "600" },
-  circleButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#001",
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 3,
-  },
   search: {
     minHeight: 50,
     borderRadius: radius.md,
@@ -397,17 +372,6 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   searchInput: { flex: 1, fontSize: 15 },
-  filters: {
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    gap: 8,
-    shadowColor: "#001",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  filterTitle: { fontSize: 13, fontWeight: "800" },
-  chip: { paddingHorizontal: 12, paddingVertical: 9, borderRadius: 99 },
   marker: {
     height: 34,
     width: 34,
@@ -431,13 +395,26 @@ const styles = StyleSheet.create({
   legend: {
     flex: 1,
     borderRadius: 14,
+    elevation: 3,
+  },
+  statusLegend: {
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 10,
-    elevation: 3,
   },
   legendItem: { flexDirection: "row", gap: 4, alignItems: "center" },
   legendText: { fontSize: 10, fontWeight: "700" },
+  temperatureLegend: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    gap: 4,
+  },
+  temperatureLegendTitle: { fontSize: 10, fontWeight: "800" },
+  temperatureGradient: { height: 8, borderRadius: radius.pill },
+  temperatureLegendLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   bottomOverlay: {
     position: "absolute",
     left: 0,
@@ -453,13 +430,22 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
   },
-  hint: {
+  seasonalDisclaimer: {
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
     borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: 3,
+    padding: spacing.sm,
     elevation: 3,
+  },
+  seasonalDisclaimerRow: { flexDirection: "row", alignItems: "flex-start" },
+  seasonalDisclaimerText: { flex: 1, fontSize: 12, lineHeight: 17 },
+  dismissDisclaimerButton: {
+    width: 44,
+    height: 44,
+    marginTop: -spacing.sm,
+    marginRight: -spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
   },
   preview: {
     padding: spacing.md,
