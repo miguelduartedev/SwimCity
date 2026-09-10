@@ -6,6 +6,7 @@ import {
   latestObservationAt,
 } from "../features/swimming-spots/domain";
 import { distanceKm } from "../features/swimming-spots/selectors";
+import { BeachImage } from "./BeachImage";
 import { StatusBadge } from "./StatusBadge";
 import { Coordinates, SwimmingSpot } from "../types/swimming";
 import { Theme, radius, spacing } from "../theme";
@@ -36,10 +37,12 @@ export function SpotCard({
         { backgroundColor: theme.surface, borderColor: theme.border },
       ]}
     >
-      <View style={[styles.photo, { backgroundColor: theme.surfaceMuted }]}>
-        <Text style={styles.photoIcon}>⌇</Text>
-        <Text style={[styles.photoText, { color: theme.teal }]}>SWIM</Text>
-      </View>
+      <BeachImage
+        spot={spot}
+        testID="spot-card-image"
+        style={[styles.photo, { backgroundColor: theme.surfaceMuted }]}
+        fallback={<ThumbnailPlaceholder theme={theme} />}
+      />
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <Text numberOfLines={1} style={[styles.title, { color: theme.text }]}>
@@ -72,6 +75,16 @@ export function SpotCard({
     </Pressable>
   );
 }
+
+function ThumbnailPlaceholder({ theme }: { theme: Theme }) {
+  return (
+    <View style={styles.thumbnailPlaceholder}>
+      <Text style={styles.photoIcon}>⌇</Text>
+      <Text style={[styles.photoText, { color: theme.teal }]}>SWIM</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
@@ -85,6 +98,10 @@ const styles = StyleSheet.create({
     width: 66,
     height: 76,
     borderRadius: 11,
+    overflow: "hidden",
+  },
+  thumbnailPlaceholder: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },

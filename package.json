@@ -4,6 +4,14 @@
   "description": "An Expo app for discovering Helsinki swimming spots with City of Helsinki observations.",
   "author": "Miguel Duarte",
   "license": "MIT",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest --runInBand",
+    "typecheck": "tsc --noEmit"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/miguelduartedev/SwimCity.git"
@@ -21,6 +29,8 @@
     "expo": "~57.0.18",
     "expo-constants": "~57.0.16",
     "expo-font": "~57.0.2",
+    "expo-image": "~57.0.4",
+    "expo-linear-gradient": "~57.0.1",
     "expo-linking": "~57.0.8",
     "expo-location": "~57.0.14",
     "expo-router": "~57.0.17",
@@ -51,14 +61,6 @@
     "jest-expo": "^57.0.5",
     "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3"
-  },
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "test": "jest --runInBand",
-    "typecheck": "tsc --noEmit"
   },
   "jest": {
     "preset": "jest-expo",

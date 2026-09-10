@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FavoriteButton } from "../../components/FavoriteButton";
+import { BeachImage } from "../../components/BeachImage";
 import { StatusBadge } from "../../components/StatusBadge";
 import {
   algaeLabel,
@@ -89,9 +90,12 @@ export default function DetailScreen() {
           { backgroundColor: theme.teal, height: heroHeight },
         ]}
       >
-        <View style={styles.heroWave}>
-          <Text style={styles.wave}>≈</Text>
-        </View>
+        <BeachImage
+          spot={spot}
+          testID="spot-hero-image"
+          style={StyleSheet.absoluteFill}
+          fallback={<HeroPlaceholder />}
+        />
         <Pressable
           onPress={goBack}
           accessibilityRole="button"
@@ -286,6 +290,14 @@ export default function DetailScreen() {
           style={styles.actionFavorite}
         />
       </View>
+    </View>
+  );
+}
+
+function HeroPlaceholder() {
+  return (
+    <View style={styles.heroWave}>
+      <Text style={styles.wave}>≈</Text>
     </View>
   );
 }

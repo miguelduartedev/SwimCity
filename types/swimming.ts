@@ -30,6 +30,7 @@ export interface SwimmingSpot {
   address: string;
   coordinates: Coordinates;
   description: string;
+  imageUrl?: string;
   amenities: Amenity[];
   accessible?: AccessibilitySummary;
   lifeguard?: LifeguardInfo;

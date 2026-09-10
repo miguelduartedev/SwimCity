@@ -44,6 +44,7 @@ describe('Helsinki Service Map normalization', () => {
       name: { en: 'Mustikkamaa beach' },
       street_address: { en: 'Mustikkamaanpolku 2' },
       address_zip: '00570',
+      picture_url: 'https://media.hel.fi/mustikkamaa.jpg',
       location: { coordinates: [24.99305, 60.17906] },
       connections: [{ section_type: 'OTHER_INFO', name: { en: 'Lifeguard on duty. Services: dressing rooms, shower, toilet facilities and café.' }, tags: ['#valvonta'] }],
       observations: [
@@ -55,6 +56,7 @@ describe('Helsinki Service Map normalization', () => {
     expect(result).toMatchObject({
       id: '40559',
       name: 'Mustikkamaa beach',
+      imageUrl: 'https://media.hel.fi/mustikkamaa.jpg',
       coordinates: { latitude: 60.17906, longitude: 24.99305 },
       amenities: ['shower', 'toilet', 'cafe', 'changing_room'],
       lifeguard: { available: false, seasonLabel: 'Not currently in season' },
@@ -64,6 +66,16 @@ describe('Helsinki Service Map normalization', () => {
   it('keeps unknown source values unavailable and rejects records without point coordinates', () => {
     expect(normalizeServiceMapUnit({ id: 1, name: { en: 'Broken' } })).toBeUndefined();
     expect(normalizeServiceMapUnit({ id: 2, name: { en: 'Unknown' }, location: { coordinates: [24.9, 60.1] }, observations: [{ property: 'swimming_water_cyanobacteria', time: '2026-08-30T10:00:00Z', value: 'unexpected' }] })?.observation.algae).toBeUndefined();
+  });
+  it('omits missing or blank Service Map picture URLs', () => {
+    const beach = {
+      id: 40142,
+      name: { en: 'Hietaranta beach' },
+      location: { coordinates: [24.91, 60.17] as [number, number] },
+    };
+
+    expect(normalizeServiceMapUnit({ ...beach, picture_url: null })?.imageUrl).toBeUndefined();
+    expect(normalizeServiceMapUnit({ ...beach, picture_url: '   ' })?.imageUrl).toBeUndefined();
   });
   it('excludes non-swimming entries accidentally returned by the beach service', () => {
     const cafe = normalizeServiceMapUnit({

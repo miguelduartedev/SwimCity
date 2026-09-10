@@ -33,6 +33,7 @@ describe("DetailScreen", () => {
           id: "40142",
           cityId: "helsinki",
           name: "Hietaranta beach",
+          imageUrl: "https://media.hel.fi/hietaranta.jpg",
           address: "Helsinki",
           description: "",
           coordinates: { latitude: 60.17, longitude: 24.93 },
@@ -60,5 +61,6 @@ describe("DetailScreen", () => {
     expect(
       screen.getByText(/Water-quality estimate based on algae/),
     ).toBeTruthy();
+    expect(screen.getByTestId("spot-hero-image")).toBeTruthy();
   });
 });
