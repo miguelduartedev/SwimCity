@@ -4,9 +4,30 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { VercelObservability } from '../components/VercelObservability';
 import { getTheme } from '../theme';
 
 export default function RootLayout() {
-  const [client] = useState(() => new QueryClient()); const theme = getTheme(useColorScheme());
-  return <SafeAreaProvider><QueryClientProvider client={client}><StatusBar style={theme.background === '#07141D' ? 'light' : 'dark'} /><Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.background } }}><Stack.Screen name="(tabs)" /><Stack.Screen name="spot/[id]" options={{ presentation: 'card' }} /></Stack></QueryClientProvider></SafeAreaProvider>;
+  const [client] = useState(() => new QueryClient());
+  const theme = getTheme(useColorScheme());
+
+  return (
+    <SafeAreaProvider>
+      <QueryClientProvider client={client}>
+        <StatusBar
+          style={theme.background === '#07141D' ? 'light' : 'dark'}
+        />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: theme.background },
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="spot/[id]" options={{ presentation: 'card' }} />
+        </Stack>
+        <VercelObservability />
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
 }
