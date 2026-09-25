@@ -9,7 +9,6 @@ SwimCity is an Expo app for discovering Helsinki swimming spots. It brings City 
 ### iOS
 
 <p align="center">
-  <img src="screenshots/ios-explore-temperature-helsinki.png" alt="SwimCity iOS Explore map centered on Helsinki with temperature markers" width="250" />
   <img src="screenshots/ios-explore-temperature-overview.png" alt="SwimCity iOS Explore map showing the wider Helsinki region and temperature legend" width="250" />
 </p>
 
