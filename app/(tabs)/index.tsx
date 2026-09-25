@@ -10,12 +10,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useColorScheme,
   View,
 } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { StatusBadge } from "../../components/StatusBadge"
 import { SwimmingMap } from "../../components/SwimmingMap"
+import { ThemeToggle } from "../../components/ThemeToggle"
 import {
   calculateSwimmingStatus,
   formatFreshness,
@@ -29,13 +29,14 @@ import {
   TEMPERATURE_GRADIENT_LOCATIONS,
 } from "../../features/swimming-spots/mapPresentation"
 import { filterSpots } from "../../features/swimming-spots/selectors"
+import { useAppTheme } from "../../hooks/useAppTheme"
 import { useSwimmingSpots } from "../../hooks/useSwimmingSpots"
 import { useSeasonalDisclaimerStore } from "../../stores/useSeasonalDisclaimerStore"
-import { getTheme, radius, spacing, statusMeta } from "../../theme"
+import { radius, spacing, statusMeta, Theme } from "../../theme"
 import { Coordinates, SwimmingSpot } from "../../types/swimming"
 
 export default function ExploreScreen() {
-  const theme = getTheme(useColorScheme())
+  const { theme } = useAppTheme()
   const insets = useSafeAreaInsets()
   const router = useRouter()
   const { data = [], isLoading, isError, refetch } = useSwimmingSpots()
@@ -109,11 +110,14 @@ export default function ExploreScreen() {
           { paddingTop: Math.max(insets.top + spacing.xs, spacing.lg) },
         ]}
       >
-        <View>
-          <Text style={[styles.brand, { color: theme.text }]}>SwimCity</Text>
-          <Text style={[styles.subtitle, { color: theme.textMuted }]}>
-            Helsinki, Finland
-          </Text>
+        <View style={styles.brandRow}>
+          <View>
+            <Text style={[styles.brand, { color: theme.text }]}>SwimCity</Text>
+            <Text style={[styles.subtitle, { color: theme.textMuted }]}>
+              Helsinki, Finland
+            </Text>
+          </View>
+          <ThemeToggle theme={theme} />
         </View>
         <View
           style={[
@@ -219,7 +223,7 @@ function MapLegend({
   theme,
 }: {
   displayMode: MapDisplayMode
-  theme: ReturnType<typeof getTheme>
+  theme: Theme
 }) {
   if (displayMode === "summer-status") {
     return (
@@ -282,7 +286,7 @@ function SpotPreview({
   onDetails,
 }: {
   spot: SwimmingSpot
-  theme: ReturnType<typeof getTheme>
+  theme: Theme
   onClose: () => void
   onDetails: () => void
 }) {
@@ -332,7 +336,7 @@ function Centered({
   onAction,
 }: {
   label: string
-  theme: ReturnType<typeof getTheme>
+  theme: Theme
   action?: string
   onAction?: () => void
 }) {
@@ -359,6 +363,11 @@ const styles = StyleSheet.create({
     elevation: 5,
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   brand: { fontSize: 25, fontWeight: "900", letterSpacing: -1 },
   subtitle: { fontSize: 12, fontWeight: "600" },

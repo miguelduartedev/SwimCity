@@ -1,6 +1,15 @@
 const mockScreens: Array<{ name: string; options: Record<string, unknown> }> = [];
 let mockScreenOptions: Record<string, unknown> = {};
 
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  __esModule: true,
+  default: {
+    getItem: jest.fn(() => Promise.resolve(null)),
+    setItem: jest.fn(() => Promise.resolve()),
+    removeItem: jest.fn(() => Promise.resolve()),
+  },
+}));
+
 jest.mock("expo-router", () => {
   const React = require("react");
   const Tabs = ({ children, screenOptions }: { children: React.ReactNode; screenOptions: Record<string, unknown> }) => {
