@@ -1,6 +1,6 @@
 # SwimCity
 
-SwimCity is an Expo app for discovering Helsinki swimming spots. It puts City of Helsinki observations, water temperature, algae information, and data freshness where they are easy to compare.
+SwimCity is an Expo app for discovering Helsinki swimming spots. It brings City of Helsinki observations, water temperature, algae information, and data freshness into one focused place for exploring the city’s beaches.
 
 > SwimCity is an active side project and work in progress. It is not an official safety service or a substitute for City guidance.
 
@@ -8,15 +8,17 @@ SwimCity is an Expo app for discovering Helsinki swimming spots. It puts City of
 
 ### iOS
 
-![SwimCity Explore map](screenshots/explore-map.PNG)
+<p align="center">
+  <img src="screenshots/ios-explore-temperature-overview.png" alt="SwimCity iOS Explore map showing the wider Helsinki region and temperature legend" width="250" />
+</p>
 
-### Android
+<p align="center">
+  <img src="screenshots/ios-list-live-observations.png" alt="SwimCity iOS list of Helsinki beaches with live observations and water temperatures" width="250" />
+  <img src="screenshots/ios-saved-favorites.png" alt="SwimCity iOS Saved screen showing a favorite beach" width="250" />
+  <img src="screenshots/ios-beach-details.png" alt="SwimCity iOS beach details screen with a beach photo, temperature, and observation status" width="250" />
+</p>
 
-_Coming soon._
-
-### Web
-
-_Coming soon._
+The screenshots above show the current iOS experience, including the temperature-focused off-season map, live-observation list, saved beaches, and beach details. Android and web views use the same core flows with platform-specific map surfaces.
 
 ## Features
 
@@ -118,7 +120,7 @@ Tests cover condition precedence and freshness, sorting/filtering, Service Map n
 
 ## Future improvements
 
-- Add verified screenshots and a short demo GIF.
+- Add a short demo GIF and additional Android/web captures.
 - Add a dedicated attribution/settings surface and localized Finnish/Swedish copy.
 - Revisit UiRaS only after its reuse licence is confirmed.
 - Add city providers for Oslo and Stockholm without introducing city selection yet.
