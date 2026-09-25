@@ -1,22 +1,28 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
+import { Appearance, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { VercelObservability } from '../components/VercelObservability';
-import { getTheme } from '../theme';
+import { useAppTheme } from '../hooks/useAppTheme';
 
 export default function RootLayout() {
   const [client] = useState(() => new QueryClient());
-  const theme = getTheme(useColorScheme());
+  const { mode, theme } = useAppTheme();
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      document.documentElement.style.colorScheme = mode;
+    } else {
+      Appearance.setColorScheme(mode);
+    }
+  }, [mode]);
 
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={client}>
-        <StatusBar
-          style={theme.background === '#07141D' ? 'light' : 'dark'}
-        />
+        <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
         <Stack
           screenOptions={{
             headerShown: false,

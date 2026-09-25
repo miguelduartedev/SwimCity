@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,7 +17,8 @@ import {
   sortSpots,
 } from "../../features/swimming-spots/selectors";
 import { useSwimmingSpots } from "../../hooks/useSwimmingSpots";
-import { getTheme, radius, spacing } from "../../theme";
+import { useAppTheme } from "../../hooks/useAppTheme";
+import { radius, spacing } from "../../theme";
 import { Coordinates, SortOption } from "../../types/swimming";
 
 const options: { key: SortOption; label: string }[] = [
@@ -27,7 +27,7 @@ const options: { key: SortOption; label: string }[] = [
   { key: "warmest", label: "Warmest" },
 ];
 export default function ListScreen() {
-  const theme = getTheme(useColorScheme());
+  const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { data = [], isLoading, isError, refetch } = useSwimmingSpots();

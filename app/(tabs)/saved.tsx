@@ -4,17 +4,17 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SpotCard } from "../../components/SpotCard";
 import { useSwimmingSpots } from "../../hooks/useSwimmingSpots";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useFavoritesStore } from "../../stores/useFavoritesStore";
-import { getTheme, spacing } from "../../theme";
+import { spacing } from "../../theme";
 
 export default function SavedScreen() {
-  const theme = getTheme(useColorScheme());
+  const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { data = [], isLoading } = useSwimmingSpots();

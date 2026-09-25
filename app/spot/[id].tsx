@@ -7,7 +7,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,7 +21,8 @@ import {
   qualityLabel,
 } from "../../features/swimming-spots/domain";
 import { useSwimmingSpots } from "../../hooks/useSwimmingSpots";
-import { getTheme, radius, spacing, Theme } from "../../theme";
+import { useAppTheme } from "../../hooks/useAppTheme";
+import { radius, spacing, Theme } from "../../theme";
 import { goBackOrExplore } from "../../utils/navigation";
 
 const amenityLabels = {
@@ -36,7 +36,7 @@ const amenityLabels = {
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 
 export default function DetailScreen() {
-  const theme = getTheme(useColorScheme());
+  const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();

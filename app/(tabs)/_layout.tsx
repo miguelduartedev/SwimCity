@@ -1,8 +1,8 @@
 import { Tabs } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { ColorValue, StyleSheet, useColorScheme, View } from "react-native";
+import { ColorValue, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTheme } from "../../theme";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 const TabIcon = ({
   name,
@@ -17,7 +17,7 @@ const TabIcon = ({
 );
 
 export default function TabLayout() {
-  const theme = getTheme(useColorScheme());
+  const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   return (
     <Tabs
